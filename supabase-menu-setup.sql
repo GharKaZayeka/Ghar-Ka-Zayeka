@@ -9,6 +9,7 @@ create table if not exists public.menu_items (
   is_available boolean not null default true,
   created_at timestamptz not null default now()
 );
+alter table public.menu_items add column if not exists category text;
 alter table public.menu_items enable row level security;
 grant select on public.menu_items to anon, authenticated;
 grant insert, update, delete on public.menu_items to authenticated;
