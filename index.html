@@ -81,6 +81,7 @@ footer{background:#35170b;color:#f7e5cf;text-align:center;padding:24px 18px;font
    <label><input id="dishAvailable" type="checkbox" checked style="width:auto"> Available for customers</label>
    <div class="admin-actions"><button class="btn" type="submit" id="saveDish">Save menu item</button><button class="btn outline" type="button" id="cancelEdit">Clear form</button></div>
   </form>
+  <div class="admin-actions"><button class="btn gold" type="button" id="importSampleMenu">Import Existing Sample Menu into Database</button></div><p class="small-note">This one-time import copies the current sample dishes into Supabase. Existing prices are preserved; repeated dish names are combined as Half/Full variants. Photos and descriptions can be added later from this dashboard.</p>
   <p id="adminStatus" class="admin-status" role="status"></p><div id="adminList" class="admin-list"></div>
  </div>
 </section></main><footer><p><strong>Ghar Ka Zayeka</strong></p><p>North Indian Cuisine • Lucknow, Uttar Pradesh</p><p>Call / WhatsApp: 95595 41741</p><p>© <span id="year"></span> Ghar Ka Zayeka. All rights reserved.</p></footer>
@@ -110,6 +111,33 @@ async function showSession(session){const user=session&&session.user;const allow
 sb.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>showSession(session),0);});
 document.getElementById("adminLoginBtn").addEventListener("click",async()=>{status("adminLoginStatus","Signing in…");const email=document.getElementById("adminEmail").value.trim();const password=document.getElementById("adminPassword").value;const {data,error}=await sb.auth.signInWithPassword({email,password});if(error){status("adminLoginStatus",error.message);return;}if(!data.user||data.user.email.toLowerCase()!==ADMIN_EMAIL){await sb.auth.signOut();status("adminLoginStatus","This account is not authorised as admin.");return;}status("adminLoginStatus","Login successful.");await showSession(data);});
 document.getElementById("adminLogout").addEventListener("click",async()=>{await sb.auth.signOut();status("adminLoginStatus","You are logged out.");});
+document.getElementById("importSampleMenu").addEventListener("click",importSampleMenu);
+async function importSampleMenu(){
+ if(!confirm("Import all existing sample dishes into your Supabase menu? This will only run if the database menu is empty."))return;
+ status("adminStatus","Checking database…");
+ const {data:existing,error:checkError}=await sb.from("menu_items").select("id").limit(1);
+ if(checkError){status("adminStatus","Could not check database: "+checkError.message);return;}
+ if(existing&&existing.length){status("adminStatus","Import stopped: database already contains menu items. No data was changed.");return;}
+ const grouped=new Map();
+ dishes.forEach(d=>{
+  const key=String(d.name).trim()+"|"+String(d.category||"Menu");
+  if(!grouped.has(key))grouped.set(key,[]);
+  grouped.get(key).push(Number(d.price));
+ });
+ const payload=Array.from(grouped.entries()).map(([key,prices])=>{
+  const [name,category]=key.split("|");
+  if(prices.length>1){
+   const sorted=[...prices].sort((a,b)=>a-b);
+   return {name,category,price:sorted[0],half_price:sorted[0],full_price:sorted[sorted.length-1],image_url:null,description:null,is_available:true};
+  }
+  return {name,category,price:prices[0],half_price:null,full_price:null,image_url:null,description:null,is_available:true};
+ });
+ status("adminStatus","Importing "+payload.length+" menu items…");
+ const {error}=await sb.from("menu_items").insert(payload);
+ if(error){status("adminStatus","Import failed: "+error.message);return;}
+ status("adminStatus","Success! "+payload.length+" menu items imported. You can now edit, delete and manage them below.");
+ await refreshAdmin();
+}
 async function refreshAdmin(){const {data,error}=await sb.from("menu_items").select("*").order("created_at",{ascending:false});if(error){status("adminStatus","Could not load menu: "+error.message);return;}menuRows=data||[];makeFilters();renderMenu();const list=document.getElementById("adminList");list.innerHTML="";if(!data.length){list.textContent="No database menu items yet. Add your first dish above. Existing sample menu remains visible to customers until you add database items.";return;}data.forEach(item=>{const row=document.createElement("div");row.className="admin-item";const info=document.createElement("div");info.textContent=item.name+" — "+(item.half_price!=null||item.full_price!=null?("Half ₹"+(item.half_price??"—")+" / Full ₹"+(item.full_price??"—")):("₹"+item.price));const small=document.createElement("small");small.textContent=(item.category||"Menu")+" • "+(item.is_available?"Available":"Unavailable");info.appendChild(small);const actions=document.createElement("div");const edit=document.createElement("button");edit.type="button";edit.textContent="Edit";edit.onclick=()=>fillForm(item);const del=document.createElement("button");del.type="button";del.textContent="Delete";del.style.marginLeft="6px";del.onclick=async()=>{if(!confirm("Delete "+item.name+"?"))return;const {error}=await sb.from("menu_items").delete().eq("id",item.id);if(error){status("adminStatus",error.message);return;}status("adminStatus","Menu item deleted.");await refreshAdmin();};actions.append(edit,del);row.append(info,actions);list.appendChild(row);});}
 function fillForm(item){editingId=item.id;document.getElementById("editId").value=item.id;document.getElementById("dishName").value=item.name;document.getElementById("dishPrice").value=item.price||"";document.getElementById("dishHalfPrice").value=item.half_price??"";document.getElementById("dishFullPrice").value=item.full_price??"";document.getElementById("dishCategory").value=item.category||"";document.getElementById("dishImage").value=item.image_url||"";document.getElementById("dishDescription").value=item.description||"";document.getElementById("dishAvailable").checked=!!item.is_available;document.getElementById("saveDish").textContent="Update menu item";document.getElementById("menuForm").scrollIntoView({behavior:"smooth"});}
 function clearForm(){editingId=null;document.getElementById("menuForm").reset();document.getElementById("dishAvailable").checked=true;document.getElementById("saveDish").textContent="Save menu item";document.getElementById("editId").value="";}
