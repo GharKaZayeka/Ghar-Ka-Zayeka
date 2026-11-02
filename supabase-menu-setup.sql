@@ -10,6 +10,8 @@ create table if not exists public.menu_items (
   created_at timestamptz not null default now()
 );
 alter table public.menu_items add column if not exists category text;
+alter table public.menu_items add column if not exists half_price numeric(10,2) check (half_price is null or half_price >= 0);
+alter table public.menu_items add column if not exists full_price numeric(10,2) check (full_price is null or full_price >= 0);
 alter table public.menu_items enable row level security;
 grant select on public.menu_items to anon, authenticated;
 grant insert, update, delete on public.menu_items to authenticated;
