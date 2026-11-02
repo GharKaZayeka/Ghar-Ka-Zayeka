@@ -109,12 +109,17 @@ document.getElementById("adminClose").addEventListener("click",()=>panel.classLi
 function status(id,msg){document.getElementById(id).textContent=msg||"";}
 async function showSession(session){const user=session&&session.user;const allowed=user&&user.email&&user.email.toLowerCase()===ADMIN_EMAIL;loginBox.hidden=!!allowed;dashboard.hidden=!allowed;if(allowed)await refreshAdmin();}
 sb.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>showSession(session),0);});
-document.getElementById("adminLoginBtn").addEventListener("click",async()=>{status("adminLoginStatus","Signing in…");const email=document.getElementById("adminEmail").value.trim();const password=document.getElementById("adminPassword").value;const {data,error}=await sb.auth.signInWithPassword({email,password});if(error){status("adminLoginStatus",error.message);return;}if(!data.user||data.user.email.toLowerCase()!==ADMIN_EMAIL){await sb.auth.signOut();status("adminLoginStatus","This account is not authorised as admin.");return;}status("adminLoginStatus","Login successful.");await showSession(data);});
+document.getElementById("adminLoginBtn").addEventListener("click",async()=>{status("adminLoginStatus","Signing in…");const email=document.getElementById("adminEmail").value.trim();const password=document.getElementById("adminPassword").value;const {data,error}=await sb.auth.signInWithPassword({email,password});if(error){status("adminLoginStatus",error.message);return;}if(!data.user||data.user.email.toLowerCase()!==ADMIN_EMAIL){await sb.auth.signOut();status("adminLoginStatus","This account is not authorised as admin.");return;}status("adminLoginStatus","Login successful.");await showSession(data.session);});
 document.getElementById("adminLogout").addEventListener("click",async()=>{await sb.auth.signOut();status("adminLoginStatus","You are logged out.");});
 document.getElementById("importSampleMenu").addEventListener("click",importSampleMenu);
 async function importSampleMenu(){
  if(!confirm("Import all existing sample dishes into your Supabase menu? This will only run if the database menu is empty."))return;
- status("adminStatus","Checking database…");
+ const {data:authData,error:authError}=await sb.auth.getSession();
+ if(authError){status("adminStatus","Could not verify Supabase login: "+authError.message);return;}
+ const activeSession=authData&&authData.session;
+ if(!activeSession){status("adminStatus","Import blocked: no active Supabase login session was found. Please log out and sign in again.");return;}
+ if(!activeSession.user||!activeSession.user.email||activeSession.user.email.toLowerCase()!==ADMIN_EMAIL){status("adminStatus","Import blocked: active Supabase account does not match the authorised admin email.");return;}
+ status("adminStatus","Supabase session confirmed for "+activeSession.user.email+". Checking database…");
  const {data:existing,error:checkError}=await sb.from("menu_items").select("id").limit(1);
  if(checkError){status("adminStatus","Could not check database: "+checkError.message);return;}
  if(existing&&existing.length){status("adminStatus","Import stopped: database already contains menu items. No data was changed.");return;}
