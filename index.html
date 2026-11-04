@@ -75,6 +75,13 @@ h1{font-size:clamp(2.55rem,5.2vw,4.65rem);line-height:1.04;letter-spacing:-1.8px
 @media(max-width:800px){.extra-cards{grid-template-columns:1fr 1fr}.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.extra-section{padding:44px 16px}}
 @media(max-width:500px){.extra-cards{grid-template-columns:1fr}.gallery-tile img{height:160px}}
 
+
+/* Compact two-column menu category selector */
+.filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 22px;width:100%;max-width:650px;margin:0 auto 18px}
+.filter{display:flex;align-items:center;justify-content:flex-start;gap:7px;padding:7px 4px;border:0;border-radius:0;background:transparent;color:var(--deep);font-size:.94rem;font-weight:750;text-align:left;cursor:pointer;box-shadow:none}
+.filter::before{content:"•";color:var(--rust);font-size:1.1rem;line-height:1}
+.filter.active,.filter:hover{background:transparent;color:var(--rust);text-decoration:underline;text-underline-offset:4px}
+@media(max-width:500px){.filters{gap:5px 12px}.filter{font-size:.86rem;padding:7px 2px}}
 </style>
 </head>
 <body>
@@ -145,12 +152,60 @@ const SUPABASE_URL = "https://lrpjtvjnpjhzkpfxygfb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_C0WtvgK3b-oh7aToVZOUNA_EKABLmj-";
 const sb = window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const ADMIN_EMAIL = "cbsedivdeepak2007@gmail.com";
-let activeCategory="All", menuRows=null, editingId=null;
+let activeCategory=null, menuRows=null, editingId=null;
 const filters=document.getElementById("filters"), grid=document.getElementById("menuGrid"), search=document.getElementById("search");
 const normalizeSearch=v=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
 function currentItems(){return menuRows&&menuRows.length?menuRows.map(x=>({id:x.id,name:x.name,price:x.price,half_price:x.half_price,full_price:x.full_price,category:x.category||"Menu",image_url:x.image_url,description:x.description,is_available:x.is_available})):dishes.map((x,i)=>({...x,id:"local-"+i,is_available:true}));}
-function makeFilters(){const cats=["All",...new Set(currentItems().filter(x=>x.is_available).map(x=>x.category||"Menu"))];filters.innerHTML="";cats.forEach(cat=>{const b=document.createElement("button");b.className="filter"+(cat===activeCategory?" active":"");b.textContent=cat;b.onclick=()=>{activeCategory=cat;makeFilters();renderMenu()};filters.appendChild(b)});if(!cats.includes(activeCategory))activeCategory="All";}
-function renderMenu(){const q=normalizeSearch(search.value);const list=currentItems().filter(d=>d.is_available&&(activeCategory==="All"||(d.category||"Menu")===activeCategory)&&(!q||normalizeSearch(d.name+" "+(d.category||"")+" "+(d.description||"")).includes(q)));grid.innerHTML="";if(!list.length){grid.innerHTML="<p>No dishes found. Try another search.</p>";return;}list.forEach(d=>{const card=document.createElement("article");card.className="dish";if(d.image_url){const img=document.createElement("img");img.className="dish-photo";img.src=d.image_url;img.alt=d.name;img.loading="lazy";card.appendChild(img);}const top=document.createElement("div");top.className="dish-top";const h=document.createElement("h3");h.textContent=d.name;const p=document.createElement("div");p.className="price";const hasVariants=d.half_price!=null||d.full_price!=null;let chosenLabel="";let chosenPrice=Number(d.price||d.half_price||d.full_price||0);let variant;if(hasVariants){variant=document.createElement("select");variant.setAttribute("aria-label","Choose portion for "+d.name);variant.style.cssText="padding:8px;border:1px solid #ead9c4;border-radius:9px;background:#fffaf0;font:inherit;margin:10px 0;width:100%";if(d.half_price!=null){const o=document.createElement("option");o.value="Half";o.textContent="Half — ₹"+Number(d.half_price).toLocaleString("en-IN");variant.appendChild(o);}if(d.full_price!=null){const o=document.createElement("option");o.value="Full";o.textContent="Full — ₹"+Number(d.full_price).toLocaleString("en-IN");variant.appendChild(o);}chosenLabel=variant.value;chosenPrice=Number(chosenLabel==="Half"?d.half_price:d.full_price);p.textContent="₹"+chosenPrice.toLocaleString("en-IN");variant.addEventListener("change",()=>{chosenLabel=variant.value;chosenPrice=Number(chosenLabel==="Half"?d.half_price:d.full_price);p.textContent="₹"+chosenPrice.toLocaleString("en-IN");a.href=orderUrl(d,chosenLabel,chosenPrice);});}else{p.textContent="₹"+Number(d.price).toLocaleString("en-IN");}top.append(h,p);const c=document.createElement("div");c.className="category";c.textContent=d.category||"Menu";card.append(top,c);if(variant)card.appendChild(variant);if(d.description){const desc=document.createElement("p");desc.className="dish-description";desc.textContent=d.description;card.appendChild(desc);}const foot=document.createElement("div");foot.className="order-one";const a=document.createElement("a");a.textContent="Order this on WhatsApp ↗";a.href=orderUrl(d,chosenLabel,chosenPrice);a.target="_blank";a.rel="noopener";foot.appendChild(a);card.appendChild(foot);grid.appendChild(card);});}
+const menuCategories=["Breakfast","Snacks","Combo and Meals","Curries and Side Dish","Paneer Specials","Breads and Paratha"];
+function menuCategoryGroup(value){
+ const c=normalizeSearch(value);
+ if(c.includes("breakfast"))return "Breakfast";
+ if(c.includes("snack"))return "Snacks";
+ if(c.includes("paneer special"))return "Paneer Specials";
+ if(c.includes("bread")||(/^paratha$/.test(c))||c.includes("breads paratha"))return "Breads and Paratha";
+ if(c.includes("curr")||c.includes("side dish")||c.includes("side"))return "Curries and Side Dish";
+ if(c.includes("combo")||c.includes("meal")||c.includes("rice")||c.includes("paratha"))return "Combo and Meals";
+ return null;
+}
+function makeFilters(){
+ filters.innerHTML="";
+ menuCategories.forEach(cat=>{
+  const b=document.createElement("button");
+  b.type="button";
+  b.className="filter"+(cat===activeCategory?" active":"");
+  b.textContent=cat;
+  b.setAttribute("aria-pressed",String(cat===activeCategory));
+  b.onclick=()=>{activeCategory=activeCategory===cat?null:cat;makeFilters();renderMenu();};
+  filters.appendChild(b);
+ });
+}
+function renderMenu(){
+ const q=normalizeSearch(search.value);
+ grid.innerHTML="";
+ if(!activeCategory&&!q)return;
+ const list=currentItems().filter(d=>d.is_available&&(!activeCategory||menuCategoryGroup(d.category)===activeCategory)&&(!q||normalizeSearch(d.name+" "+(d.category||"")+" "+(d.description||"")).includes(q)));
+ if(!list.length){grid.innerHTML="<p>No dishes found. Try another search.</p>";return;}
+ list.forEach(d=>{
+  const card=document.createElement("article");card.className="dish";
+  if(d.image_url){const img=document.createElement("img");img.className="dish-photo";img.src=d.image_url;img.alt=d.name;img.loading="lazy";card.appendChild(img);}
+  const top=document.createElement("div");top.className="dish-top";
+  const h=document.createElement("h3");h.textContent=d.name;
+  const p=document.createElement("div");p.className="price";
+  const hasVariants=d.half_price!=null||d.full_price!=null;let chosenLabel="";let chosenPrice=Number(d.price||d.half_price||d.full_price||0);let variant;
+  if(hasVariants){
+   variant=document.createElement("select");variant.setAttribute("aria-label","Choose portion for "+d.name);
+   variant.style.cssText="padding:8px;border:1px solid #ead9c4;border-radius:9px;background:#fffaf0;font:inherit;margin:10px 0;width:100%";
+   if(d.half_price!=null){const o=document.createElement("option");o.value="Half";o.textContent="Half — ₹"+Number(d.half_price).toLocaleString("en-IN");variant.appendChild(o);}
+   if(d.full_price!=null){const o=document.createElement("option");o.value="Full";o.textContent="Full — ₹"+Number(d.full_price).toLocaleString("en-IN");variant.appendChild(o);}
+   chosenLabel=variant.value;chosenPrice=Number(chosenLabel==="Half"?d.half_price:d.full_price);p.textContent="₹"+chosenPrice.toLocaleString("en-IN");
+   variant.addEventListener("change",()=>{chosenLabel=variant.value;chosenPrice=Number(chosenLabel==="Half"?d.half_price:d.full_price);p.textContent="₹"+chosenPrice.toLocaleString("en-IN");a.href=orderUrl(d,chosenLabel,chosenPrice);});
+  }else{p.textContent="₹"+Number(d.price).toLocaleString("en-IN");}
+  top.append(h,p);const c=document.createElement("div");c.className="category";c.textContent=d.category||"Menu";card.append(top,c);
+  if(variant)card.appendChild(variant);
+  if(d.description){const desc=document.createElement("p");desc.className="dish-description";desc.textContent=d.description;card.appendChild(desc);}
+  const foot=document.createElement("div");foot.className="order-one";const a=document.createElement("a");a.textContent="Order this on WhatsApp ↗";a.href=orderUrl(d,chosenLabel,chosenPrice);a.target="_blank";a.rel="noopener";foot.appendChild(a);card.appendChild(foot);grid.appendChild(card);
+ });
+}
 function orderUrl(d,label,price){const portion=label?" — "+label:"";return "https://wa.me/919559541741?text="+encodeURIComponent("Namaste Ghar Ka Zayeka, I would like to order: "+d.name+portion+" (₹"+price+"). Please confirm availability and delivery.");}
 function renderGallery(){const el=document.getElementById("galleryGrid");if(!el)return;const photos=menuRows.filter(d=>d.is_available&&d.image_url).slice(0,8);el.innerHTML="";if(!photos.length){el.innerHTML="<div class=\"gallery-empty\">Menu photos will appear here as they are added from the Admin Dashboard.</div>";return;}photos.forEach(d=>{const fig=document.createElement("figure");fig.className="gallery-tile";const img=document.createElement("img");img.src=d.image_url;img.alt=d.name;img.loading="lazy";const cap=document.createElement("figcaption");cap.textContent=d.name;fig.append(img,cap);el.appendChild(fig);});}\nasync function loadMenu(){const {data,error}=await sb.from("gkz_menu_items").select("*").order("display_order",{ascending:true});if(!error)menuRows=(data||[]).map(x=>({...x,description:x.discription||""}));else console.error("Menu load failed:",error.message);makeFilters();renderMenu();renderGallery();}
 search.addEventListener("input",renderMenu);search.addEventListener("search",renderMenu);search.addEventListener("change",renderMenu);
