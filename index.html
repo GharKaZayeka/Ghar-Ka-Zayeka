@@ -225,43 +225,32 @@ async function listBucketPhotos(path="",depth=0){
  }
  return found;
 }
-function renderPhotoCards(elementId,names,photos){
+function renderPhotoCards(elementId,items){
  const el=document.getElementById(elementId);if(!el)return;
  el.innerHTML="";
- names.forEach(name=>{
-  const key=photoKey(name);
-  const found=photos.find(p=>p.key.includes(key)||key.includes(p.key));
+ items.forEach(item=>{
   const fig=document.createElement("figure");fig.className="gallery-tile";
-  if(found&&found.url){const img=document.createElement("img");img.src=found.url;img.alt=name;img.loading="lazy";fig.appendChild(img);}
+  if(item&&item.url){const img=document.createElement("img");img.src=item.url;img.alt=item.name;img.loading="lazy";fig.appendChild(img);}
   else{const missing=document.createElement("div");missing.className="gallery-empty";missing.textContent="Photo not found yet";fig.appendChild(missing);}
-  const cap=document.createElement("figcaption");cap.textContent=name;fig.appendChild(cap);el.appendChild(fig);
+  const cap=document.createElement("figcaption");cap.textContent=item.name;fig.appendChild(cap);el.appendChild(fig);
  });
 }
 async function renderTargetPhotos(){
  const rows=(menuRows||[]).filter(d=>d.is_available&&d.image_url);
- const rowPhotos=rows.map(d=>({key:photoKey(d.name),url:d.image_url}));
- const storagePhotos=await listBucketPhotos();
- const bucketPhotos=storagePhotos.map(p=>({key:photoKey(p.path),url:p.url}));
- const choose=(name)=>{
-  const key=photoKey(name);
-  const aliases={
-   "kachori bhaji":["kachori bhaji","kachori"],
-   "chole bhature":["chole bhature","chole bhatura"],
-   "kadai paneer":["dhaba style kadahi paneer","kadai paneer","kadahi paneer","kadhai paneer","karahi paneer"],
-   "veg macaroni":["chatpati masala veg macaroni","veg macaroni","macaroni"],
-   "biryani":["veg biryani","biryani"],
-   "paneer bhurji paratha":["protein filled paneer bhurji paratha","paneer bhurji paratha","bhurji paratha","paneer bhurji"],
-   "paneer pakoda":["crispy golden paneer pakoda","paneer pakoda","paneer pakora"],
-   "macaroni":["chatpati masala veg macaroni","macaroni","veg macaroni"]
-  }[key]||[key];
-  // Use the image URL saved on the matching menu item first. Storage-path matching is only a fallback.
-  return rowPhotos.find(p=>aliases.some(a=>p.key.includes(a)))
-      || bucketPhotos.find(p=>aliases.some(a=>p.key.includes(a)));
- };
- const toRecords=names=>names.map(name=>{const p=choose(name);return {key:photoKey(name),url:p&&p.url};});
- const speciality=toRecords(specialityPhotoNames),gallery=toRecords(galleryPhotoNames);
- renderPhotoCards("specialityGrid",specialityPhotoNames,speciality);
- renderPhotoCards("galleryGrid",galleryPhotoNames,gallery);
+ const targets=[
+  {name:"Kachori Bhaji",match:"kachori bhaji"},
+  {name:"Chole Bhature",match:"chole bhature"},
+  {name:"Kadai Paneer",match:"dhaba style kadahi paneer"},
+  {name:"Veg Macaroni",match:"chatpati masala veg macaroni"},
+  {name:"Biryani",match:"veg biryani"},
+  {name:"Paneer Bhurji Paratha",match:"protein filled paneer bhurji paratha"},
+  {name:"Paneer Pakoda",match:"crispy golden paneer pakoda"}
+ ];
+ const getItem=match=>rows.find(d=>normalizeSearch(d.name).includes(match));
+ const cards=targets.map(t=>{const item=getItem(t.match);return {name:t.name,url:item?item.image_url:""};});
+ const byName=Object.fromEntries(cards.map(x=>[x.name,x]));
+ renderPhotoCards("specialityGrid",["Kachori Bhaji","Chole Bhature","Kadai Paneer","Veg Macaroni"].map(n=>byName[n]));
+ renderPhotoCards("galleryGrid",["Chole Bhature","Kachori Bhaji","Biryani","Paneer Bhurji Paratha","Paneer Pakoda","Veg Macaroni"].map(n=>byName[n]));
 }
 function renderGallery(){renderTargetPhotos();}
 async function loadMenu(){const {data,error}=await sb.from("gkz_menu_items").select("*").order("display_order",{ascending:true});if(!error)menuRows=(data||[]).map(x=>({...x,description:x.discription||""}));else console.error("Menu load failed:",error.message);makeFilters();renderMenu();renderGallery();}
