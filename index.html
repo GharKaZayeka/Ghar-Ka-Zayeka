@@ -182,7 +182,6 @@ function makeFilters(){
 function renderMenu(){
  const q=normalizeSearch(search.value);
  grid.innerHTML="";
- if(!activeCategory&&!q)return;
  const list=currentItems().filter(d=>d.is_available&&(!activeCategory||menuCategoryGroup(d.category)===activeCategory)&&(!q||normalizeSearch(d.name+" "+(d.category||"")+" "+(d.description||"")).includes(q)));
  if(!list.length){grid.innerHTML="<p>No dishes found. Try another search.</p>";return;}
  list.forEach(d=>{
