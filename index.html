@@ -247,17 +247,16 @@ async function renderTargetPhotos(){
   const aliases={
    "kachori bhaji":["kachori bhaji","kachori"],
    "chole bhature":["chole bhature","chole bhatura"],
-   "kadai paneer":["kadai paneer","kadahi paneer","kadhai paneer","karahi paneer"],
-   "veg macaroni":["veg macaroni","macaroni"],
-   "biryani":["biryani"],
-   "paneer bhurji paratha":["paneer bhurji paratha","bhurji paratha","paneer bhurji"],
-   "paneer pakoda":["paneer pakoda","paneer pakora"],
-   "macaroni":["macaroni","veg macaroni"]
+   "kadai paneer":["dhaba style kadahi paneer","kadai paneer","kadahi paneer","kadhai paneer","karahi paneer"],
+   "veg macaroni":["chatpati masala veg macaroni","veg macaroni","macaroni"],
+   "biryani":["veg biryani","biryani"],
+   "paneer bhurji paratha":["protein filled paneer bhurji paratha","paneer bhurji paratha","bhurji paratha","paneer bhurji"],
+   "paneer pakoda":["crispy golden paneer pakoda","paneer pakoda","paneer pakora"],
+   "macaroni":["chatpati masala veg macaroni","macaroni","veg macaroni"]
   }[key]||[key];
-  // Prefer the actual uploaded file path whose folder/name identifies this dish.
-  // The menu row's image_url can be stale or accidentally point to another dish.
-  return bucketPhotos.find(p=>aliases.some(a=>p.key.includes(a)))
-      || rowPhotos.find(p=>aliases.some(a=>p.key.includes(a)));
+  // Use the image URL saved on the matching menu item first. Storage-path matching is only a fallback.
+  return rowPhotos.find(p=>aliases.some(a=>p.key.includes(a)))
+      || bucketPhotos.find(p=>aliases.some(a=>p.key.includes(a)));
  };
  const toRecords=names=>names.map(name=>{const p=choose(name);return {key:photoKey(name),url:p&&p.url};});
  const speciality=toRecords(specialityPhotoNames),gallery=toRecords(galleryPhotoNames);
