@@ -239,9 +239,9 @@ function renderPhotoCards(elementId,names,photos){
 }
 async function renderTargetPhotos(){
  const rows=(menuRows||[]).filter(d=>d.is_available&&d.image_url);
- const photoRecords=rows.map(d=>({key:photoKey(d.name),url:d.image_url}));
+ const rowPhotos=rows.map(d=>({key:photoKey(d.name),url:d.image_url}));
  const storagePhotos=await listBucketPhotos();
- storagePhotos.forEach(p=>photoRecords.push({key:photoKey(p.path),url:p.url}));
+ const bucketPhotos=storagePhotos.map(p=>({key:photoKey(p.path),url:p.url}));
  const choose=(name)=>{
   const key=photoKey(name);
   const aliases={
@@ -254,7 +254,10 @@ async function renderTargetPhotos(){
    "paneer pakoda":["paneer pakoda","paneer pakora"],
    "macaroni":["macaroni","veg macaroni"]
   }[key]||[key];
-  return photoRecords.find(p=>aliases.some(a=>p.key.includes(a)));
+  // Prefer the actual uploaded file path whose folder/name identifies this dish.
+  // The menu row's image_url can be stale or accidentally point to another dish.
+  return bucketPhotos.find(p=>aliases.some(a=>p.key.includes(a)))
+      || rowPhotos.find(p=>aliases.some(a=>p.key.includes(a)));
  };
  const toRecords=names=>names.map(name=>{const p=choose(name);return {key:photoKey(name),url:p&&p.url};});
  const speciality=toRecords(specialityPhotoNames),gallery=toRecords(galleryPhotoNames);
