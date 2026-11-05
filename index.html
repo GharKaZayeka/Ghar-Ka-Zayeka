@@ -99,6 +99,16 @@ h1{font-size:clamp(2.55rem,5.2vw,4.65rem);line-height:1.04;letter-spacing:-1.8px
 /* Place the speciality tagline in a matching section card */
 .tagline-box{width:max-content;max-width:calc(100% - 32px);margin:0 auto 12px;padding:7px 16px;text-align:center;background:#f8ebd2;border:1px solid #efdfc9;border-radius:999px;box-shadow:none}
 .tagline-box .brand-tagline{font-size:1.02rem!important;color:#7c321b!important;margin:0!important;padding:0!important}
+
+.platform-links{display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;margin:14px auto 0}
+.platform-link{width:76px;height:54px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:#d9a441;color:#35170b;text-decoration:none;box-shadow:0 8px 20px rgba(132,48,26,.16);transition:transform .18s ease,filter .18s ease}
+.platform-link:hover{transform:translateY(-2px);filter:brightness(1.04)}
+.platform-icon{width:30px;height:30px;display:block}
+.whatsapp-icon{color:#168b50}
+.zomato-wordmark{font-size:17px;font-weight:950;letter-spacing:-1px;color:#cb202d;font-family:Arial,sans-serif}
+.swiggy-wordmark{font-size:17px;font-weight:900;letter-spacing:-.7px;color:#e87924;font-family:Arial,sans-serif}
+@media(max-width:500px){.platform-links{gap:11px}.platform-link{width:70px;height:50px}}
+
 </style>
 </head>
 <body>
@@ -129,9 +139,14 @@ h1{font-size:clamp(2.55rem,5.2vw,4.65rem);line-height:1.04;letter-spacing:-1.8px
 <article class="extra-card step-card"><h3>Confirm the details</h3><p>We will confirm availability, order details and delivery charges with you.</p></article>
 </div></div></section>
 <section class="extra-section alt" id="feedback"><div class="wrap"><div class="extra-head"><span class="eyebrow">We Value Your Thoughts</span><h2>Review &amp; Feedback</h2><p>We value your experience. Choose how you would like to share it.</p><div class="hero-actions" style="justify-content:center;flex-wrap:nowrap;gap:14px"><a class="btn" style="min-width:150px" href="https://g.page/r/CW0enM7snDkFEBM/review" target="_blank" rel="noopener">Review</a><a class="btn" style="min-width:150px" href="https://wa.me/919559541741?text=Namaste%20Ghar%20Ka%20Zayeka%2C%20I%20would%20like%20to%20share%20my%20feedback." target="_blank" rel="noopener">Feedback</a></div></div></div></section>
-<section class="order-band" id="contact"><div class="wrap"><span class="eyebrow">We’re just a call away</span><h2>Ready for a ghar-jaisa meal?</h2><p>Call or message us to place an order, check availability, and confirm delivery to your area in Lucknow.</p><a class="btn gold" href="https://wa.me/919559541741?text=Namaste%20Ghar%20Ka%20Zayeka%2C%20I%20would%20like%20to%20place%20an%20order." target="_blank" rel="noopener">Order on WhatsApp</a>
-<div class="actions" style="justify-content:center;margin-top:14px"><a class="btn gold" href="https://zomato.onelink.me/xqzv/qs9qgwkq" target="_blank" rel="noopener">Order on Zomato ↗</a><a class="btn gold" href="https://www.swiggy.com/direct/brand/803246?source=swiggy-direct&amp;subSource=generic" target="_blank" rel="noopener">Order on Swiggy ↗</a></div>
-<div class="contact-grid"><div class="contact-card"><strong>Call us</strong><a href="tel:+919559541741">95595 41741</a></div><div class="contact-card"><strong>WhatsApp</strong><a href="https://wa.me/919559541741" target="_blank" rel="noopener">Chat with us ↗</a></div><div class="contact-card"><strong>Delivery area</strong><span>All areas of Lucknow</span></div></div></div></section>
+<section class="order-band" id="contact"><div class="wrap"><span class="eyebrow">We’re just a call away</span><h2>Ready for a ghar-jaisa meal?</h2><p>Call or message us to place an order, check availability, and confirm delivery to your area in Lucknow.</p><div class="platform-links" aria-label="Order through delivery platforms">
+<a class="platform-link" href="https://wa.me/919559541741?text=Namaste%20Ghar%20Ka%20Zayeka%2C%20I%20would%20like%20to%20place%20an%20order." target="_blank" rel="noopener" aria-label="Order on WhatsApp">
+<svg class="platform-icon whatsapp-icon" viewBox="0 0 32 32" role="img" aria-label="WhatsApp"><path fill="currentColor" d="M16 .8A15.1 15.1 0 0 0 3.1 23.8L1 31l7.4-2A15.1 15.1 0 1 0 16 .8Zm0 27.4a12.2 12.2 0 0 1-6.2-1.7l-.4-.2-4.4 1.2 1.2-4.3-.3-.5A12.3 12.3 0 1 1 16 28.2Z"/><path fill="currentColor" d="M23 18.5c-.4-.2-2.2-1.1-2.6-1.2-.3-.1-.6-.2-.8.2-.3.4-1 1.2-1.2 1.4-.2.2-.4.3-.8.1-.4-.2-1.6-.6-3-1.9-1.1-1-1.9-2.2-2.1-2.6-.2-.4 0-.6.2-.8l.6-.7c.2-.2.3-.4.4-.6.1-.2 0-.5 0-.7-.1-.2-.8-2-1.1-2.7-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.5-.3.4-1.2 1.2-1.2 3s1.2 3.5 1.4 3.7c.2.2 2.4 3.7 5.8 5.1.8.3 1.4.5 1.9.7.8.2 1.5.2 2.1.1.7-.1 2.2-.9 2.5-1.7.3-.8.3-1.5.2-1.7-.1-.2-.3-.3-.7-.5Z"/></svg>
+</a>
+<a class="platform-link zomato-wordmark" href="https://zomato.onelink.me/xqzv/qs9qgwkq" target="_blank" rel="noopener" aria-label="Order on Zomato">zomato</a>
+<a class="platform-link swiggy-wordmark" href="https://www.swiggy.com/direct/brand/803246?source=swiggy-direct&amp;subSource=generic" target="_blank" rel="noopener" aria-label="Order on Swiggy">Swiggy</a>
+</div>
+<div class="contact-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div class="contact-card"><strong>Call us</strong><a href="tel:+919559541741">95595 41741</a></div><div class="contact-card"><strong>Delivery area</strong><span>All areas of Lucknow</span></div></div></div></section>
 
 <section id="adminPanel" class="admin-panel" aria-label="Admin dashboard">
  <div id="adminLogin">
