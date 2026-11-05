@@ -156,15 +156,17 @@ let activeCategory=null, menuRows=null, editingId=null;
 const filters=document.getElementById("filters"), grid=document.getElementById("menuGrid"), search=document.getElementById("search");
 const normalizeSearch=v=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
 function currentItems(){return menuRows&&menuRows.length?menuRows.map(x=>({id:x.id,name:x.name,price:x.price,half_price:x.half_price,full_price:x.full_price,category:x.category||"Menu",image_url:x.image_url,description:x.description,is_available:x.is_available})):dishes.map((x,i)=>({...x,id:"local-"+i,is_available:true}));}
-const menuCategories=["Breakfast","Snacks","Combo and Meals","Curries and Side Dish","Paneer Specials","Breads and Paratha"];
+const menuCategories=["Breakfast","Snacks","Combo and Meals","Rice & Meals","Curries and Side Dish","Paneer Specials","Breads and Paratha","Drinks & Accompaniments"];
 function menuCategoryGroup(value){
  const c=normalizeSearch(value);
  if(c.includes("breakfast"))return "Breakfast";
  if(c.includes("snack"))return "Snacks";
+ if(c.includes("drink")||c.includes("beverage")||c.includes("accompaniment"))return "Drinks & Accompaniments";
+ if(c.includes("rice"))return "Rice & Meals";
  if(c.includes("paneer special"))return "Paneer Specials";
  if(c.includes("bread")||(/^paratha$/.test(c))||c.includes("breads paratha"))return "Breads and Paratha";
  if(c.includes("curr")||c.includes("side dish")||c.includes("side"))return "Curries and Side Dish";
- if(c.includes("combo")||c.includes("meal")||c.includes("rice")||c.includes("paratha"))return "Combo and Meals";
+ if(c.includes("combo")||c.includes("meal")||c.includes("paratha"))return "Combo and Meals";
  return null;
 }
 function makeFilters(){
@@ -182,7 +184,8 @@ function makeFilters(){
 function renderMenu(){
  const q=normalizeSearch(search.value);
  grid.innerHTML="";
- const list=currentItems().filter(d=>d.is_available&&(!activeCategory||menuCategoryGroup(d.category)===activeCategory)&&(!q||normalizeSearch(d.name+" "+(d.category||"")+" "+(d.description||"")).includes(q)));
+ if(!activeCategory){grid.innerHTML="<p>Please select a menu category to view dishes.</p>";return;}
+ const list=currentItems().filter(d=>d.is_available&&menuCategoryGroup(d.category)===activeCategory&&(!q||normalizeSearch(d.name+" "+(d.category||"")+" "+(d.description||"")).includes(q)));
  if(!list.length){grid.innerHTML="<p>No dishes found. Try another search.</p>";return;}
  list.forEach(d=>{
   const card=document.createElement("article");card.className="dish";
