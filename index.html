@@ -246,7 +246,16 @@ async function renderTargetPhotos(){
   {name:"Paneer Bhurji Paratha",match:"protein filled paneer bhurji paratha"},
   {name:"Paneer Pakoda",match:"crispy golden paneer pakoda"}
  ];
- const getItem=match=>rows.find(d=>normalizeSearch(d.name).includes(match));
+ const getItem=match=>{
+  const candidates=rows.filter(d=>normalizeSearch(d.name).includes(match)&&d.image_url);
+  // Prefer the standalone dish over a combo/meal whose name merely starts with the same dish name.
+  candidates.sort((a,b)=>{
+   const an=normalizeSearch(a.name),bn=normalizeSearch(b.name);
+   const aExact=an===match?0:1,bExact=bn===match?0:1;
+   return aExact-bExact||an.length-bn.length;
+  });
+  return candidates[0]||null;
+ };
  const cards=targets.map(t=>{const item=getItem(t.match);return {name:t.name,url:item?item.image_url:""};});
  const byName=Object.fromEntries(cards.map(x=>[x.name,x]));
  renderPhotoCards("specialityGrid",["Kachori Bhaji","Chole Bhature","Kadai Paneer","Veg Macaroni"].map(n=>byName[n]));
