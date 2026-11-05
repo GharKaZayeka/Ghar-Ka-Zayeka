@@ -112,7 +112,8 @@ h1{font-size:clamp(2.55rem,5.2vw,4.65rem);line-height:1.04;letter-spacing:-1.8px
 <article class="extra-card step-card"><h3>Send your order</h3><p>Tap “Order this” to send your selection on WhatsApp, or contact us directly.</p></article>
 <article class="extra-card step-card"><h3>Confirm the details</h3><p>We will confirm availability, order details and delivery charges with you.</p></article>
 </div></div></section>
-<section class="extra-section" id="gallery"><div class="wrap"><div class="extra-head"><span class="eyebrow">Fresh from our menu</span><h2>Food Gallery</h2><p>A look at dishes with photos currently added to our menu.</p></div><div class="gallery-grid" id="galleryGrid"><div class="gallery-empty">Menu photos will appear here as they are added from the Admin Dashboard.</div></div></div></section>
+<section class="extra-section alt" id="speciality"><div class="wrap"><div class="extra-head"><span class="eyebrow">Our favourites</span><h2>Our Speciality</h2></div><div class="gallery-grid" id="specialityGrid"><div class="gallery-empty">Loading speciality photos…</div></div></div></section>
+<section class="extra-section" id="gallery"><div class="wrap"><div class="extra-head"><span class="eyebrow">Fresh from our menu</span><h2>Food Gallery</h2></div><div class="gallery-grid" id="galleryGrid"><div class="gallery-empty">Loading gallery photos…</div></div></div></section>
 <section class="extra-section alt" id="feedback"><div class="wrap"><div class="extra-head"><span class="eyebrow">We value your thoughts</span><h2>Your Review n Feedback Matters</h2><p>We value your experience. Choose how you would like to share it.</p><div class="hero-actions" style="justify-content:center;flex-wrap:nowrap;gap:14px"><a class="btn" style="min-width:150px" href="https://g.page/r/CW0enM7snDkFEBM/review" target="_blank" rel="noopener">Review</a><a class="btn" style="min-width:150px" href="https://wa.me/919559541741?text=Namaste%20Ghar%20Ka%20Zayeka%2C%20I%20would%20like%20to%20share%20my%20feedback." target="_blank" rel="noopener">Feedback</a></div></div></div></section>
 <section class="order-band" id="contact"><div class="wrap"><span class="eyebrow">We’re just a call away</span><h2>Ready for a ghar-jaisa meal?</h2><p>Call or message us to place an order, check availability, and confirm delivery to your area in Lucknow.</p><a class="btn gold" href="https://wa.me/919559541741?text=Namaste%20Ghar%20Ka%20Zayeka%2C%20I%20would%20like%20to%20place%20an%20order." target="_blank" rel="noopener">Order on WhatsApp</a>
 <div class="actions" style="justify-content:center;margin-top:14px"><a class="btn gold" href="https://zomato.onelink.me/xqzv/qs9qgwkq" target="_blank" rel="noopener">Order on Zomato ↗</a><a class="btn gold" href="https://www.swiggy.com/direct/brand/803246?source=swiggy-direct&amp;subSource=generic" target="_blank" rel="noopener">Order on Swiggy ↗</a></div>
@@ -209,7 +210,62 @@ function renderMenu(){
  });
 }
 function orderUrl(d,label,price){const portion=label?" — "+label:"";return "https://wa.me/919559541741?text="+encodeURIComponent("Namaste Ghar Ka Zayeka, I would like to order: "+d.name+portion+" (₹"+price+"). Please confirm availability and delivery.");}
-function renderGallery(){const el=document.getElementById("galleryGrid");if(!el)return;const photos=menuRows.filter(d=>d.is_available&&d.image_url).slice(0,8);el.innerHTML="";if(!photos.length){el.innerHTML="<div class=\"gallery-empty\">Menu photos will appear here as they are added from the Admin Dashboard.</div>";return;}photos.forEach(d=>{const fig=document.createElement("figure");fig.className="gallery-tile";const img=document.createElement("img");img.src=d.image_url;img.alt=d.name;img.loading="lazy";const cap=document.createElement("figcaption");cap.textContent=d.name;fig.append(img,cap);el.appendChild(fig);});}
+const specialityPhotoNames=["Kachori Bhaji","Chole Bhature","Kadai Paneer","Veg Macaroni"];
+const galleryPhotoNames=["Chole Bhature","Kachori Bhaji","Biryani","Paneer Bhurji Paratha","Paneer Pakoda","Macaroni"];
+function photoKey(v){return normalizeSearch(v).replace(/\\s+/g," ");}
+async function listBucketPhotos(path="",depth=0){
+ if(depth>4)return [];
+ const {data,error}=await sb.storage.from("Menu-images").list(path,{limit:100,offset:0});
+ if(error){console.warn("Could not list menu photo folder:",error.message);return [];}
+ const found=[];
+ for(const item of (data||[])){
+  const full=path?path+"/"+item.name:item.name;
+  if(item.id===null || (!item.metadata && !/\\.[a-z0-9]{2,5}$/i.test(item.name))){
+   found.push(...await listBucketPhotos(full,depth+1));
+  }else{
+   const {data:url}=sb.storage.from("Menu-images").getPublicUrl(full);
+   if(url&&url.publicUrl)found.push({path:full,url:url.publicUrl});
+  }
+ }
+ return found;
+}
+function renderPhotoCards(elementId,names,photos){
+ const el=document.getElementById(elementId);if(!el)return;
+ el.innerHTML="";
+ names.forEach(name=>{
+  const key=photoKey(name);
+  const found=photos.find(p=>p.key.includes(key)||key.includes(p.key));
+  const fig=document.createElement("figure");fig.className="gallery-tile";
+  if(found&&found.url){const img=document.createElement("img");img.src=found.url;img.alt=name;img.loading="lazy";fig.appendChild(img);}
+  else{const missing=document.createElement("div");missing.className="gallery-empty";missing.textContent="Photo not found yet";fig.appendChild(missing);}
+  const cap=document.createElement("figcaption");cap.textContent=name;fig.appendChild(cap);el.appendChild(fig);
+ });
+}
+async function renderTargetPhotos(){
+ const rows=(menuRows||[]).filter(d=>d.is_available&&d.image_url);
+ const photoRecords=rows.map(d=>({key:photoKey(d.name),url:d.image_url}));
+ const storagePhotos=await listBucketPhotos();
+ storagePhotos.forEach(p=>photoRecords.push({key:photoKey(p.path),url:p.url}));
+ const choose=(name)=>{
+  const key=photoKey(name);
+  const aliases={
+   "kachori bhaji":["kachori bhaji","kachori"],
+   "chole bhature":["chole bhature","chole bhatura"],
+   "kadai paneer":["kadai paneer","karahi paneer"],
+   "veg macaroni":["veg macaroni","macaroni"],
+   "biryani":["biryani"],
+   "paneer bhurji paratha":["paneer bhurji paratha","bhurji paratha"],
+   "paneer pakoda":["paneer pakoda","paneer pakora"],
+   "macaroni":["macaroni","veg macaroni"]
+  }[key]||[key];
+  return photoRecords.find(p=>aliases.some(a=>p.key.includes(a)));
+ };
+ const toRecords=names=>names.map(name=>{const p=choose(name);return {key:photoKey(name),url:p&&p.url};});
+ const speciality=toRecords(specialityPhotoNames),gallery=toRecords(galleryPhotoNames);
+ renderPhotoCards("specialityGrid",specialityPhotoNames,speciality);
+ renderPhotoCards("galleryGrid",galleryPhotoNames,gallery);
+}
+function renderGallery(){renderTargetPhotos();}
 async function loadMenu(){const {data,error}=await sb.from("gkz_menu_items").select("*").order("display_order",{ascending:true});if(!error)menuRows=(data||[]).map(x=>({...x,description:x.discription||""}));else console.error("Menu load failed:",error.message);makeFilters();renderMenu();renderGallery();}
 search.addEventListener("input",renderMenu);search.addEventListener("search",renderMenu);search.addEventListener("change",renderMenu);
 document.getElementById("year").textContent=new Date().getFullYear();makeFilters();renderMenu();loadMenu();
