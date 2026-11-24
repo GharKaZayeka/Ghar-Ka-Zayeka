@@ -269,7 +269,7 @@ function renderPhotoCards(elementId,items){
  });
 }
 async function renderTargetPhotos(){
- const rows=(menuRows||[]).filter(d=>d.is_available&&d.image_url);
+ const rows=(menuRows||[]).filter(d=>d.image_url);
  const targets=[
   {name:"Kachori Bhaji",match:"kachori bhaji"},
   {name:"Chole Bhature",match:"chole bhature"},
@@ -277,22 +277,32 @@ async function renderTargetPhotos(){
   {name:"Veg Macaroni",match:"chatpati masala veg macaroni"},
   {name:"Biryani",match:"veg biryani"},
   {name:"Paneer Bhurji Paratha",match:"protein filled paneer bhurji"},
-  {name:"Paneer Pakoda",match:"crispy golden paneer pakoda"}
+  {name:"Paneer Pakoda",match:"crispy golden paneer pakoda"},
+  {name:"Tawa Toast Stuffed Paneer Paratha",match:"tawa toast stuffed paneer paratha",aliases:["tawa toast stuffed paneer","tawa toast paneer paratha","stuffed paneer paratha"]},
+  {name:"North India Chole Gravy",match:"north india chole gravy",aliases:["north indian chole gravy","north india chole","north indian chole","chole gravy"]}
  ];
- const getItem=match=>{
-  const candidates=rows.filter(d=>normalizeSearch(d.name).includes(match)&&d.image_url);
-  // Prefer the standalone dish over a combo/meal whose name merely starts with the same dish name.
-  candidates.sort((a,b)=>{
-   const an=normalizeSearch(a.name),bn=normalizeSearch(b.name);
-   const aExact=an===match?0:1,bExact=bn===match?0:1;
-   return aExact-bExact||an.length-bn.length;
-  });
-  return candidates[0]||null;
+ const getItem=(match,aliases=[])=>{
+  const terms=[match,...aliases].map(normalizeSearch).filter(Boolean);
+  const candidates=rows.map(d=>{
+   const name=normalizeSearch(d.name);
+   let score=0;
+   for(const term of terms){
+    if(name.includes(term)) score=Math.max(score,100+term.length);
+    else {
+     const words=term.split(" ").filter(w=>w.length>2);
+     const hits=words.filter(w=>name.includes(w)).length;
+     score=Math.max(score,hits*10+(hits===words.length?20:0));
+    }
+   }
+   return {item:d,score,name};
+  }).filter(x=>x.score>=20);
+  candidates.sort((a,b)=>b.score-a.score||a.name.length-b.name.length);
+  return candidates[0]?.item||null;
  };
- const cards=targets.map(t=>{const item=getItem(t.match);return {name:t.name,url:item?item.image_url:""};});
+ const cards=targets.map(t=>{const item=getItem(t.match,t.aliases||[]);return {name:t.name,url:item?item.image_url:""};});
  const byName=Object.fromEntries(cards.map(x=>[x.name,x]));
  renderPhotoCards("specialityGrid",["Kachori Bhaji","Chole Bhature","Kadai Paneer","Veg Macaroni"].map(n=>byName[n]));
- renderPhotoCards("galleryGrid",["Chole Bhature","Kachori Bhaji","Biryani","Paneer Bhurji Paratha","Paneer Pakoda","Veg Macaroni"].map(n=>byName[n]));
+ renderPhotoCards("galleryGrid",["Chole Bhature","Kachori Bhaji","Biryani","Paneer Bhurji Paratha","Paneer Pakoda","Veg Macaroni","North India Chole Gravy","Tawa Toast Stuffed Paneer Paratha"].map(n=>byName[n]));
 }
 function renderGallery(){renderTargetPhotos();}
 async function loadMenu(){const {data,error}=await sb.from("gkz_menu_items").select("*").order("display_order",{ascending:true});if(!error)menuRows=(data||[]).map(x=>({...x,description:x.discription||""}));else console.error("Menu load failed:",error.message);makeFilters();renderMenu();renderGallery();}
