@@ -379,7 +379,7 @@ async function renderTargetPhotos(){
   {name:"Kadai Paneer",match:"dhaba style kadahi paneer"},
   {name:"Veg Macaroni",match:"chatpati masala veg macaroni"},
   {name:"Biryani",match:"veg biryani"},
-  {name:"Paneer Bhurji Paratha",match:"paneer bhurji"},
+  {name:"Paneer Bhurji Paratha",match:"protein filled paneer bhurji paratha"},
   {name:"Paneer Pakoda",match:"crispy golden paneer pakoda"},
   {name:"North India Chole Gravy",match:"chole gravy"},
   {name:"Tawa Toast Stuffed Paneer Paratha",match:"tawa toast stuffed paneer paratha"}
@@ -397,7 +397,7 @@ async function renderTargetPhotos(){
  const cards=targets.map(t=>{const item=getItem(t.match);return {name:t.name,url:item?item.image_url:""};});
  const byName=Object.fromEntries(cards.map(x=>[x.name,x]));
  renderPhotoCards("specialityGrid",["Kachori Bhaji","Chole Bhature","Kadai Paneer","Veg Macaroni"].map(n=>byName[n]));
- renderPhotoCards("galleryGrid",["Chole Bhature","Kachori Bhaji","Biryani","Paneer Bhurji Paratha","Paneer Pakoda","Veg Macaroni","North Indian Chole Gravy","Tawa Toast Stuffed Paneer Paratha"].map(n=>byName[n]));
+ renderPhotoCards("galleryGrid",["Chole Bhature","Kachori Bhaji","Biryani","Paneer Bhurji Paratha","Paneer Pakoda","Veg Macaroni","North India Chole Gravy","Tawa Toast Stuffed Paneer Paratha"].map(n=>byName[n]));
 }
 function renderGallery(){renderTargetPhotos();}
 async function loadMenu(){const {data,error}=await sb.from("gkz_menu_items").select("*").order("display_order",{ascending:true});if(!error)menuRows=(data||[]).map(x=>({...x,description:x.discription||""}));else console.error("Menu load failed:",error.message);makeFilters();renderMenu();renderGallery();}
