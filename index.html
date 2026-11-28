@@ -21,7 +21,17 @@ function apply(){
   if(!d)return;
   if(!d.getElementById('cart-white-black-overrides')){
    const style=d.createElement('style');style.id='cart-white-black-overrides';
-   style.textContent='.cart-panel{background:#fff!important}#cartOpen{background:#fff!important;color:#111!important;border:1px solid #d8d8d8!important}#cartOpen .cart-icon,.dish-actions .cart-icon{stroke:#000!important}';
+   style.textContent=`
+    .cart-panel{background:#fff!important}
+    #cartOpen{background:#fff!important;color:#111!important;border:1px solid #d8d8d8!important}
+    #cartOpen .cart-icon,.dish-actions .cart-icon{stroke:#000!important}
+    a[href*="swiggy.com"],a[href*="zomato"],a[href*="wa.me"],a[href*="whatsapp"],a[href*="api.whatsapp"]{
+      background:#fff!important;
+      background-color:#fff!important;
+    }
+    .order-buttons a,.social-buttons a,.delivery-buttons a,.review-buttons a{
+      background-color:#fff!important;
+    }`;
    d.head.appendChild(style);
   }
   const nav=d.getElementById('cartOpen');
