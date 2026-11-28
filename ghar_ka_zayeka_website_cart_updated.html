@@ -323,10 +323,10 @@ document.getElementById("cartCheckout").addEventListener("click",(event)=>{
  const address=document.getElementById("checkoutAddress").value.trim();
  const utr=document.getElementById("checkoutUtr").value.trim();
  if(!name||!phone||!address||!utr){alert("Please enter your name, mobile number, delivery address and UPI transaction reference number.");return;}
- if(!/^[0-9+\\s()-]{8,18}$/.test(phone)){alert("Please enter a valid mobile number.");return;}
+ if(!/^[0-9+\s()-]{8,18}$/.test(phone)){alert("Please enter a valid mobile number.");return;}
  const total=cartItems.reduce((sum,item)=>sum+(Number(item.price)*Number(item.quantity)),0);
  const lines=cartItems.map(item=>"- "+item.name+(item.variant?" ("+item.variant+")":"")+" x "+item.quantity+" = ₹"+(Number(item.price)*Number(item.quantity)).toLocaleString("en-IN"));
- const message="Namaste Ghar Ka Zayeka! I would like to place my order.\\n\\nCustomer: "+name+"\\nMobile: "+phone+"\\nDelivery address: "+address+"\\n\\nORDER DETAILS\\n"+lines.join("\\n")+"\\n\\nItem Total: ₹"+total.toLocaleString("en-IN")+"\\nUPI Transaction Reference (UTR): "+utr+"\\nPayment status: VERIFICATION PENDING\\n\\nPlease verify the payment in your UPI account and confirm my order. Please also confirm delivery availability and any delivery charges.";
+ const message="Namaste Ghar Ka Zayeka! I would like to place my order.\n\nCustomer: "+name+"\nMobile: "+phone+"\nDelivery address: "+address+"\n\nORDER DETAILS\n"+lines.join("\n")+"\n\nItem Total: ₹"+total.toLocaleString("en-IN")+"\nUPI Transaction Reference (UTR): "+utr+"\nPayment status: VERIFICATION PENDING\n\nPlease verify the payment in your UPI account and confirm my order. Please also confirm delivery availability and any delivery charges.";
  const url="https://wa.me/919559541741?text="+encodeURIComponent(message);
  window.open(url,"_blank","noopener");
 });
