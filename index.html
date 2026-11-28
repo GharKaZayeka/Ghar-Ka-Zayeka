@@ -10,7 +10,7 @@ iframe{display:block;width:100%;height:100vh;min-height:100vh;border:0}
 </style>
 </head>
 <body>
-<iframe id="site" src="/ghar_ka_zayeka_website_cart_updated.html" title="Ghar Ka Zayeka"></iframe>
+<iframe id="site" src="/ghar_ka_zayeka_website_cart_updated.html?v=20261128b" title="Ghar Ka Zayeka"></iframe>
 <script>
 (function(){
 const frame=document.getElementById('site');
@@ -31,6 +31,26 @@ function apply(){
     }
     .order-buttons a,.social-buttons a,.delivery-buttons a,.review-buttons a{
       background-color:#fff!important;
+    }
+    .payment-checkout a#cartCheckout,
+    .payment-checkout a#cartCheckout:link,
+    .payment-checkout a#cartCheckout:visited,
+    a#cartCheckout{
+      background:#84301a!important;
+      background-color:#84301a!important;
+      color:#fff!important;
+      -webkit-text-fill-color:#fff!important;
+      border:1px solid #84301a!important;
+      opacity:1!important;
+    }
+    .payment-checkout a#cartCheckout:hover,
+    .payment-checkout a#cartCheckout:focus,
+    a#cartCheckout:hover,
+    a#cartCheckout:focus{
+      background:#43180f!important;
+      background-color:#43180f!important;
+      color:#fff!important;
+      -webkit-text-fill-color:#fff!important;
     }`;
    d.head.appendChild(style);
   }
