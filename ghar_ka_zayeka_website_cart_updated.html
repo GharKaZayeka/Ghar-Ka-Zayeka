@@ -347,7 +347,7 @@ const galleryPhotoNames=["Chole Bhature","Kachori Bhaji","Biryani","Paneer Bhurj
 function photoKey(v){return normalizeSearch(v).replace(/\s+/g," ");}
 async function listBucketPhotos(path="",depth=0){
  if(depth>4)return [];
- const {data,error}=await sb.storage.from("Menu-images").list(path,{limit:100,offset:0});
+ const {data,error}=await sb.storage.from("Menu-image").list(path,{limit:100,offset:0});
  if(error){console.warn("Could not list menu photo folder:",error.message);return [];}
  const found=[];
  for(const item of (data||[])){
@@ -373,28 +373,33 @@ function renderPhotoCards(elementId,items){
 }
 async function renderTargetPhotos(){
  const rows=(menuRows||[]).filter(d=>d.image_url);
+ // Use the actual singular Supabase storage bucket as a fallback when a menu row has no image_url.
+ const storedPhotos=await listBucketPhotos();
  const targets=[
-  {name:"Kachori Bhaji",match:"kachori bhaji"},
-  {name:"Chole Bhature",match:"chole bhature"},
-  {name:"Kadai Paneer",match:"dhaba style kadahi paneer"},
-  {name:"Veg Macaroni",match:"chatpati masala veg macaroni"},
-  {name:"Biryani",match:"veg biryani"},
-  {name:"Paneer Bhurji Paratha",match:"protein filled paneer bhurji paratha"},
-  {name:"Paneer Pakoda",match:"crispy golden paneer pakoda"},
-  {name:"North India Chole Gravy",match:"chole gravy"},
-  {name:"Tawa Toast Stuffed Paneer Paratha",match:"tawa toast stuffed paneer paratha"}
+  {name:"Kachori Bhaji",tokens:["kachori","bhaji"]},
+  {name:"Chole Bhature",tokens:["chole","bhature"]},
+  {name:"Kadai Paneer",tokens:["dhaba","style","kadahi","paneer"]},
+  {name:"Veg Macaroni",tokens:["chatpati","masala","veg","macaroni"]},
+  {name:"Biryani",tokens:["veg","biryani"]},
+  {name:"Paneer Bhurji Paratha",tokens:["protein","filled","paneer","bhurji"]},
+  {name:"Paneer Pakoda",tokens:["crispy","golden","paneer","pakoda"]},
+  {name:"North India Chole Gravy",tokens:["north","india","chole","gravy"]},
+  {name:"Tawa Toast Stuffed Paneer Paratha",tokens:["tawa","toast","stuffed","paneer","paratha"]}
  ];
- const getItem=match=>{
-  const candidates=rows.filter(d=>normalizeSearch(d.name).includes(match)&&d.image_url);
-  // Prefer the standalone dish over a combo/meal whose name merely starts with the same dish name.
-  candidates.sort((a,b)=>{
-   const an=normalizeSearch(a.name),bn=normalizeSearch(b.name);
-   const aExact=an===match?0:1,bExact=bn===match?0:1;
-   return aExact-bExact||an.length-bn.length;
-  });
-  return candidates[0]||null;
+ const choose=(list,tokens,nameField,urlField)=>{
+  const ranked=list.map(item=>{
+   const value=normalizeSearch(item[nameField]||"");
+   const hits=tokens.filter(t=>value.includes(t)).length;
+   return {item,hits,exact:value===normalizeSearch(tokens.join(" "))};
+  }).filter(x=>x.hits>=Math.max(2,tokens.length-1)&&x.item[urlField]);
+  ranked.sort((a,b)=>b.hits-a.hits||(a.item[nameField]||"").length-(b.item[nameField]||"").length);
+  return ranked[0]?.item||null;
  };
- const cards=targets.map(t=>{const item=getItem(t.match);return {name:t.name,url:item?item.image_url:""};});
+ const cards=targets.map(t=>{
+  const row=choose(rows,t.tokens,"name","image_url");
+  const stored=choose(storedPhotos,t.tokens,"path","url");
+  return {name:t.name,url:row?.image_url||stored?.url||""};
+ });
  const byName=Object.fromEntries(cards.map(x=>[x.name,x]));
  renderPhotoCards("specialityGrid",["Kachori Bhaji","Chole Bhature","Kadai Paneer","Veg Macaroni"].map(n=>byName[n]));
  renderPhotoCards("galleryGrid",["Chole Bhature","Kachori Bhaji","Biryani","Paneer Bhurji Paratha","Paneer Pakoda","Veg Macaroni","North India Chole Gravy","Tawa Toast Stuffed Paneer Paratha"].map(n=>byName[n]));
