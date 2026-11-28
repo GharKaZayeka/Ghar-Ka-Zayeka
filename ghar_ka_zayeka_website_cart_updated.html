@@ -355,7 +355,7 @@ async function listBucketPhotos(path="",depth=0){
   if(item.id===null || (!item.metadata && !/\.[a-z0-9]{2,5}$/i.test(item.name))){
    found.push(...await listBucketPhotos(full,depth+1));
   }else{
-   const {data:url}=sb.storage.from("Menu-images").getPublicUrl(full);
+   const {data:url}=sb.storage.from("Menu-image").getPublicUrl(full);
    if(url&&url.publicUrl)found.push({path:full,url:url.publicUrl});
   }
  }
@@ -391,7 +391,7 @@ async function renderTargetPhotos(){
    const value=normalizeSearch(item[nameField]||"");
    const hits=tokens.filter(t=>value.includes(t)).length;
    return {item,hits,exact:value===normalizeSearch(tokens.join(" "))};
-  }).filter(x=>x.hits>=Math.max(2,tokens.length-1)&&x.item[urlField]);
+  }).filter(x=>x.hits>=2&&x.item[urlField]);
   ranked.sort((a,b)=>b.hits-a.hits||(a.item[nameField]||"").length-(b.item[nameField]||"").length);
   return ranked[0]?.item||null;
  };
@@ -448,9 +448,9 @@ document.getElementById("dishImageFile").addEventListener("change",async e=>{
  const folder=(document.getElementById("dishName").value.trim()||"menu").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||"menu";
  const filePath=folder+"/"+Date.now()+"-"+safeName;
  note.textContent="Uploading photo…";
- const {data:uploadData,error:uploadError}=await sb.storage.from("Menu-images").upload(filePath,file,{cacheControl:"3600",upsert:false,contentType:file.type});
+ const {data:uploadData,error:uploadError}=await sb.storage.from("Menu-image").upload(filePath,file,{cacheControl:"3600",upsert:false,contentType:file.type});
  if(uploadError){note.textContent="Upload failed: "+uploadError.message;return;}
- const {data:urlData}=sb.storage.from("Menu-images").getPublicUrl(uploadData.path);
+ const {data:urlData}=sb.storage.from("Menu-image").getPublicUrl(uploadData.path);
  if(!urlData||!urlData.publicUrl){note.textContent="Upload completed, but the public URL could not be created.";return;}
  document.getElementById("dishImage").value=urlData.publicUrl;
  note.textContent="Photo uploaded. Now click Save menu item / Update menu item.";
