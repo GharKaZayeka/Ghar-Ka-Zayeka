@@ -415,6 +415,23 @@ function renderCart(){
  });
  document.getElementById("cartTotal").textContent="Total: ₹"+total.toLocaleString("en-IN");
  const checkout=document.getElementById("cartCheckout");
+ // Keep the cart checkout button readable even when its WhatsApp URL is populated.
+ checkout.style.setProperty("display","block","important");
+ checkout.style.setProperty("background-color","#84301a","important");
+ checkout.style.setProperty("color","#ffffff","important");
+ checkout.style.setProperty("-webkit-text-fill-color","#ffffff","important");
+ checkout.style.setProperty("border","1px solid #84301a","important");
+ checkout.style.setProperty("opacity","1","important");
+ checkout.style.setProperty("visibility","visible","important");
+ checkout.style.setProperty("font-size","16px","important");
+ checkout.style.setProperty("line-height","1.4","important");
+ checkout.style.setProperty("text-decoration","none","important");
+ checkout.style.setProperty("padding","14px 20px","important");
+ checkout.style.setProperty("border-radius","999px","important");
+ checkout.style.setProperty("font-weight","800","important");
+ checkout.style.setProperty("text-align","center","important");
+ checkout.style.setProperty("width","100%","important");
+ checkout.style.setProperty("box-sizing","border-box","important");
  if(cartItems.length){
   const lines=cartItems.map(x=>"- "+x.name+(x.variant?" ("+x.variant+")":"")+" x "+x.quantity+" = ₹"+(Number(x.price)*Number(x.quantity)).toLocaleString("en-IN"));
   const message="Namaste Ghar Ka Zayeka, I would like to place this order:\n"+lines.join("\n")+"\n\nTotal: ₹"+total.toLocaleString("en-IN")+"\nPlease confirm availability, delivery charges and delivery for my address.";
